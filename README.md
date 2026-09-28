@@ -2,17 +2,46 @@
 Trabalho para a sprint Engenharia de Dados da pós-graduação em Ciência de Dados da PUC Rio.
 
 # Música em Contexto: MusicBrainz + Spotify
-Breve descrição do trabalho
+Através desse estudo pretendo explorar os contextos históricos e geográficos das músicas.
 
 ## Contexto de Negócios e Perguntas
-perguntas de negócio que foram formuladas, explicação do contexto dos dados brutos e resumo da estrutura desses dados brutos (colunas e tabelas). Explique sobre a licença dos dados.
 Perguntas que me motivaram a fazer esse estudo:
-- Será que existem gêneros de música que se relacionam com ...
-- Será que as características sonoras das músicas etc
-- Mais uma pergunta
+
+- Quais países têm as músicas mais dançantes?
+- Quais décadas têm as músicas mais dançantes?
+- Quais países tem músicas mais instrumentais?
+
+Para isso vou cruzar informações de três bases de dados:
+
+### MusicBrainz Canonical Dump:
+Uma base de dados feita para achar correspondências de artistas e músicas com outras bases de dados
+
+[https://musicbrainz.org/doc/Canonical_MusicBrainz_data](https://musicbrainz.org/doc/Canonical_MusicBrainz_data)
+
+**INFORMAÇÕES DE LICENÇA**
+
+MusicBrainz Canonical Data — MusicBrainz, MetaBrainz Foundation. Licença: Creative Commons Zero (CC0 1.0). Fonte: MusicBrainz Canonical MusicBrainz Data.
+
+### Spotify Huge Audio Features:
+Aqui eu encontro as características sonoras das músicas
+
+https://huggingface.co/datasets/GildasLeDrogoff/spotify-huge-track-analysis-dataset
+
+**INFORMAÇÕES DE LICENÇA**
+
+Spotify Huge Track Analysis Dataset, de Gildas Le Drogoff, disponibilizado sob a licença Creative Commons Attribution-NonCommercial 4.0 International (CC BY-NC 4.0).
+
+
+###JSON Data Dump de MusicBrainz:
+Informações de localização dos artistas
+
+ https://musicbrainz.org/doc/Development/JSON_Data_Dumps
+
+INFORMAÇÕES DE LICENÇA
+
+MusicBrainz Artist Data — MusicBrainz, MetaBrainz Foundation. Licença: Creative Commons Zero (CC0 1.0), para os dados core utilizados neste projeto.
 
 ## Carga dos Dados
-Explicação da carga de dados, como foi feita e referência ao script no GitHub (se aplicável).
 
 Para esse estudo utilizei três dataframes:
 
@@ -55,7 +84,6 @@ https://huggingface.co/datasets/GildasLeDrogoff/spotify-huge-track-analysis-data
 | Dados utilizados no projeto | Dados de faixas, gênero, popularidade e características acústicas |
 
 ## Modelagem e Catálogo de Dados
-Explicação da modelagem com a estrutura das tabelas (catálogo de dados transcrito e screenshots do sistema de catálogo).
 
 Estrutura das tabelas que fazem parte do Pipeline:
 
@@ -71,8 +99,9 @@ Estrutura das tabelas que fazem parte do Pipeline:
 | Gold   | `contexto_gold`    | Dataset final para análise              |
 
 ### Catálogo de Dados
+A tabela **contexto_gold** é a tabela final para estudo.
 
-# Catálogo de Dados — contexto_gold
+#### Catálogo de Dados — contexto_gold
 
 | Coluna             | Tipo          | Descrição                                                                |
 | ------------------ | ------------- | ------------------------------------------------------------------------ |
@@ -99,12 +128,16 @@ Estrutura das tabelas que fazem parte do Pipeline:
 
 
 ### Screenshot Staging
+![Camada Staging](staging.png)
 
 ### Screenshot Bronze
+![Camada Bronze](zbronze.png)
 
 ### Screenshot Silver
+![Camada Silver](silver.png)
 
 ### Screenshot Gold
+![Camada Gold](gold.png)
 
 ## Pipeline de Dados
 O processo foi dividido nos notebooks:
@@ -113,7 +146,7 @@ O processo foi dividido nos notebooks:
 
 **Bronze**, os datasets úteis foram salvos em tabelas e comentados. Descobri que o JSON **artist** de MusicBrainz continha vários campos que precisariam de transformação para serem salvos. Decidi salvar a tabela **mb_artist** apenas com os campos que seriam usados no estudo, já mapeados na análise prévia em Staging.
 
-IMAGEMMMMMM
+![Camada Staging](staging.png)
 
 **Silver**, aqui foi feita a normalização dos nomes de artistas e músicas para criar uma correspondência entre as tabelas **musicbrainz** e **spotify**. A partir dessa nova coluna criada foi feita a join, criando uma nova tabela, **mb_spotify**. Nesse join foram selecionadas as instâncias para as quais foi possível a conrrespondência. Isso foi feito sem perda de dados, pois as tabelas originais, **musicbrainz** e **spotify** foram preservadas na camada **bronze**. Depois foi feito um novo join, com a tabela **artist** que contém as informações de países relacionados aos artistas. Esse join foi feito usando as chaves **id** e **artist_mbids**, que são correspondentes, criando assim uma nova tabela, a **contexto_silver**.
 
@@ -122,10 +155,14 @@ IMAGEMMMMMM
 **Análise**, aqui foi feito o estudo da tabela **contexto_gold** visando responder às perguntas iniciais.
 
 ## Qualidade de Dados
-Quais problemas foram detectados e como resolveu cada um deles, que transformações foram feitas.
+A chave **combined_lookup** que teoricamente seria usada para unir a tabela **canonical de MusicBrainz** não estava com a qualidade boa. Continha espaços e letras maiúsculas. Num primeiro momento pensei em fazer uma normalização dessa coluna, mas como eu teria que criar uma coluna equivalente na tabela **spotify** eu preferi criar do zero uma coluna para equivalência na tabela de **MusicBrainz** também.
+
+Ao examinar a tabela criada na camada Silver, a **contexto_silver** eu percebi que havia nulos apenas na coluna **country**, que é muito importante para o estudo. Então decidi remover todas as instâncias que continham dados nulos, removendo 11% das linhas da tabela. Ainda sim a tabela final contém mais de 9 milhôes de instâncias.
 
 ## Análise de Dados
-Análise feita e respondendo as perguntas elaboradas na etapa 4.1.
+- **Quais Países Têm as Músicas mais Dançantes?** Os quatro países que tem músicas mais dançantes são: Jamaica (JM), República Dominicana (DO), Ilhas Virgens Americanas (VI) e Costa do Marfim (CI).
+- **Quais Décadas Têm as Músicas mais Dançantes?** A média de dançabilidade é muito uniforme entre as décadas.
+- **Quais Países Têm Músicas Mais Instrumentais?** Os seis países com uma média mais alta de instrumentalness são: Geórgia (GE), Malta (MT), Jersey (JE), Emirados Árabes(AE), Azerbaijão (AZ) e Tunísia (TN).
 
 ## Autoavaliação
-Ao finalizar o trabalho, é esperado que o aluno faça uma autoavaliação contendo uma discussão sobre se conseguiu atingir os objetivos delineados antes do início das outras etapas, suas dificuldades encontradas na execução do trabalho, bem como trabalhos futuros para enriquecer o problema e sua solução em seu portfólio.
+Acredito que essa tabela ficou bem interessante e que vale a pena aprofundar o estudo dela com uma análise mais profunda, visualizações e perguntas mais variadas. Gostaria de no futuro enriquecê-la com os gêneros das músicas, acho que isso seria uma informação muito intressante e que infelizmente ficou faltando para o estudo. Tive um aprendizado muito intenso durante esse trabalho por ser de outra área. As análises de qualidade dos dados poderiam ter sido feitas de forma mais minuciosa desde o início do projeto. Com o que eu aprendi posso ter mais profundidade e cuidado num próximo trabalho.
