@@ -59,30 +59,52 @@ Explicação da modelagem com a estrutura das tabelas (catálogo de dados transc
 
 Estrutura das tabelas que fazem parte do Pipeline:
 
-| Camada | Tabela            | Função                                  |
-| ------ | ----------------- | --------------------------------------- |
-| Bronze | `spotify`         | Dados musicais originais                |
-| Bronze | `musicbrainz`     | Dados de correspondência do MusicBrainz |
-| Bronze | `mb_artist`       | Dados dos artistas utilizados           |
-| Silver | `mb_spotify`      | Correspondência Spotify–MusicBrainz     |
-| Silver | `contexto_silver` | Dados musicais + contexto dos artistas  |
-| Gold   | `contexto_gold`   | Dataset final para análise              |
+| Camada | Tabela             | Função                                  |
+| ------ | ------------------ | --------------------------------------- |
+| Bronze | `spotify`          | Dados musicais originais                |
+| Bronze | `musicbrainz`      | Dados de correspondência do MusicBrainz |
+| Bronze | `mb_artist`        | Dados dos artistas utilizados           |
+| Silver | `musicbrainz_chave`| Tabela musicbrainz com a chave para join|
+| Silver | `spotify_chave`    | Tabela spotify com a chave para join    |
+| Silver | `mb_spotify`       | Correspondência Spotify–MusicBrainz     |
+| Silver | `contexto_silver`  | Dados musicais + contexto dos artistas  |
+| Gold   | `contexto_gold`    | Dataset final para análise              |
 
 ### Catálogo de Dados
 
-Fazer uma tabela dessas para cada tabela:
+# Catálogo de Dados — contexto_gold
 
-**Bronze** — spotify
+| Coluna             | Tipo          | Descrição                                                                |
+| ------------------ | ------------- | ------------------------------------------------------------------------ |
+| artist_credit_name | string        | Nome do artista.                                                         |
+| release_name       | string        | Nome da faixa.                                                           |
+| recording_name     | string        | Nome do álbum.                                                           |
+| album_release_date | date          | Data de lançamento do álbum.                                             |
+| duration_ms        | bigint        | Duração da faixa em milissegundos.                                       |
+| explicit           | smallint      | Indica se a faixa possui conteúdo explícito.                             |
+| track_popularity   | smallint      | Indicador de popularidade da faixa.                                      |
+| artist_popularity  | smallint      | Indicador de popularidade do artista.                                    |
+| artist_followers   | decimal(20,0) | Número de seguidores do artista.                                         |
+| tempo              | double        | Andamento estimado da faixa, em batidas por minuto (BPM).                |
+| danceability       | double        | Medida de adequação da faixa para dança.                                 |
+| energy             | double        | Medida perceptual de intensidade e atividade da faixa.                   |
+| loudness           | double        | Volume médio da faixa, medido em decibéis (dB).                          |
+| speechiness        | double        | Medida da presença de elementos de fala na faixa.                        |
+| acousticness       | double        | Medida de confiança de que a faixa é acústica.                           |
+| instrumentalness   | double        | Medida de probabilidade de a faixa não conter vocais.                    |
+| liveness           | double        | Medida da probabilidade de a faixa ter sido gravada ao vivo.             |
+| valence            | double        | Medida associada à positividade e ao humor musical da faixa.             |
+| id                 | string        | Identificador único do artista.                                          |
+| country            | string        | País ou território associado ao artista segundo os dados do MusicBrainz. |
 
-| Campo         | Tipo    | Descrição             |
-| ------------- | ------- | --------------------- |
-| `track_name`  | string  | Nome da faixa         |
-| `artist_name` | string  | Nome do artista       |
-| `track_genre` | string  | Gênero musical        |
-| `popularity`  | integer | Popularidade da faixa |
-| ...           | ...     | ...                   |
 
-DEPOIS INCLUIR SCREENSHOTS DO CATÁLOGO DE CADA CAMADA!!!!!
+### Screenshot Staging
+
+### Screenshot Bronze
+
+### Screenshot Silver
+
+### Screenshot Gold
 
 ## Pipeline de Dados
 O processo foi dividido nos notebooks:
@@ -91,7 +113,7 @@ O processo foi dividido nos notebooks:
 
 **Bronze**, os datasets úteis foram salvos em tabelas e comentados. Descobri que o JSON **artist** de MusicBrainz continha vários campos que precisariam de transformação para serem salvos. Decidi salvar a tabela **mb_artist** apenas com os campos que seriam usados no estudo, já mapeados na análise prévia em Staging.
 
-INCLUIR OS SCREENSHOTS!!!!!!!! Adicione referência aos scripts disponibilizados no Github e screenshots que evidencie que essas tabelas foram salvas (persistidas) na plataforma de nuvem utilizada.
+IMAGEMMMMMM
 
 **Silver**, aqui foi feita a normalização dos nomes de artistas e músicas para criar uma correspondência entre as tabelas **musicbrainz** e **spotify**. A partir dessa nova coluna criada foi feita a join, criando uma nova tabela, **mb_spotify**. Nesse join foram selecionadas as instâncias para as quais foi possível a conrrespondência. Isso foi feito sem perda de dados, pois as tabelas originais, **musicbrainz** e **spotify** foram preservadas na camada **bronze**. Depois foi feito um novo join, com a tabela **artist** que contém as informações de países relacionados aos artistas. Esse join foi feito usando as chaves **id** e **artist_mbids**, que são correspondentes, criando assim uma nova tabela, a **contexto_silver**.
 
